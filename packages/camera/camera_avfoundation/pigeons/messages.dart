@@ -67,6 +67,7 @@ class PlatformCameraDescription {
     required this.name,
     required this.lensDirection,
     required this.lensType,
+    required this.isVirtualDevice,
   });
 
   /// The name of the camera device.
@@ -77,6 +78,10 @@ class PlatformCameraDescription {
 
   /// The type of the camera lens.
   final PlatformCameraLensType lensType;
+
+  /// Whether the camera is a virtual (logical) device composed of multiple
+  /// physical cameras.
+  final bool isVirtualDevice;
 }
 
 // Pigeon version of the data needed for a CameraInitializedEvent.

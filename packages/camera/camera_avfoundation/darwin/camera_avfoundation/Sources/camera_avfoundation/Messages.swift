@@ -214,17 +214,22 @@ struct PlatformCameraDescription: Hashable {
   var lensDirection: PlatformCameraLensDirection
   /// The type of the camera lens.
   var lensType: PlatformCameraLensType
+  /// Whether the camera is a virtual (logical) device composed of multiple
+  /// physical cameras.
+  var isVirtualDevice: Bool
 
   // swift-format-ignore: AlwaysUseLowerCamelCase
   static func fromList(_ pigeonVar_list: [Any?]) -> PlatformCameraDescription? {
     let name = pigeonVar_list[0] as! String
     let lensDirection = pigeonVar_list[1] as! PlatformCameraLensDirection
     let lensType = pigeonVar_list[2] as! PlatformCameraLensType
+    let isVirtualDevice = pigeonVar_list[3] as! Bool
 
     return PlatformCameraDescription(
       name: name,
       lensDirection: lensDirection,
-      lensType: lensType
+      lensType: lensType,
+      isVirtualDevice: isVirtualDevice
     )
   }
   func toList() -> [Any?] {
@@ -232,6 +237,7 @@ struct PlatformCameraDescription: Hashable {
       name,
       lensDirection,
       lensType,
+      isVirtualDevice,
     ]
   }
   static func == (lhs: PlatformCameraDescription, rhs: PlatformCameraDescription) -> Bool {

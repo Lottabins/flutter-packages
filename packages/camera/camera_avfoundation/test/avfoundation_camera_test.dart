@@ -330,11 +330,13 @@ void main() {
           name: 'Test 1',
           lensDirection: PlatformCameraLensDirection.front,
           lensType: PlatformCameraLensType.ultraWide,
+          isVirtualDevice: false,
         ),
         PlatformCameraDescription(
           name: 'Test 2',
           lensDirection: PlatformCameraLensDirection.back,
           lensType: PlatformCameraLensType.telephoto,
+          isVirtualDevice: true,
         ),
       ];
       when(mockApi.getAvailableCameras()).thenAnswer((_) async => returnData);
@@ -349,6 +351,7 @@ void main() {
           cameraLensDirectionFromPlatform(returnData[i].lensDirection),
         );
         expect(cameras[i].lensType, cameraLensTypeFromPlatform(returnData[i].lensType));
+        expect(cameras[i].isVirtualDevice, returnData[i].isVirtualDevice);
         // This value isn't provided by the platform, so is hard-coded to 90.
         expect(cameras[i].sensorOrientation, 90);
       }

@@ -91,6 +91,7 @@ class PlatformCameraDescription {
     required this.name,
     required this.lensDirection,
     required this.lensType,
+    required this.isVirtualDevice,
   });
 
   /// The name of the camera device.
@@ -102,8 +103,12 @@ class PlatformCameraDescription {
   /// The type of the camera lens.
   PlatformCameraLensType lensType;
 
+  /// Whether the camera is a virtual (logical) device composed of multiple
+  /// physical cameras.
+  bool isVirtualDevice;
+
   List<Object?> _toList() {
-    return <Object?>[name, lensDirection, lensType];
+    return <Object?>[name, lensDirection, lensType, isVirtualDevice];
   }
 
   Object encode() {
@@ -116,6 +121,7 @@ class PlatformCameraDescription {
       name: result[0]! as String,
       lensDirection: result[1]! as PlatformCameraLensDirection,
       lensType: result[2]! as PlatformCameraLensType,
+      isVirtualDevice: result[3]! as bool,
     );
   }
 

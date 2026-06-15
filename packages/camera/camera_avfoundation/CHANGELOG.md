@@ -1,3 +1,11 @@
+## 0.11.0
+
+* Adds virtual (logical) multi-camera devices — triple, dual, and dual-wide — to
+  the cameras returned by `availableCameras()`, enabling automatic lens switching
+  (e.g. macro focus on supported iPhones). These devices are reported with
+  `CameraDescription.isVirtualDevice` set to true so they can be distinguished
+  from their physical counterparts.
+
 ## 0.10.2
 
 * Adds `setJpegImageQuality` for controlling JPEG compression quality.

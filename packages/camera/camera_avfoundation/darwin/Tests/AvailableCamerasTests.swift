@@ -47,6 +47,7 @@ final class AvailableCamerasTest: XCTestCase {
       telephotoCamera.position = .back
 
       var requiredTypes: [AVCaptureDevice.DeviceType] = [
+        .builtInTripleCamera, .builtInDualWideCamera, .builtInDualCamera,
         .builtInWideAngleCamera, .builtInTelephotoCamera, .builtInUltraWideCamera,
       ]
       var cameras = [wideAngleCamera, frontFacingCamera, telephotoCamera, ultraWideCamera]
@@ -84,6 +85,7 @@ final class AvailableCamerasTest: XCTestCase {
       frontFacingCamera.position = .front
 
       var requiredTypes: [AVCaptureDevice.DeviceType] = [
+        .builtInTripleCamera, .builtInDualWideCamera, .builtInDualCamera,
         .builtInWideAngleCamera, .builtInTelephotoCamera, .builtInUltraWideCamera,
       ]
       let cameras = [wideAngleCamera, frontFacingCamera]
@@ -116,6 +118,7 @@ final class AvailableCamerasTest: XCTestCase {
       unspecifiedCamera.position = .unspecified
 
       var requiredTypes: [AVCaptureDevice.DeviceType] = [
+        .builtInTripleCamera, .builtInDualWideCamera, .builtInDualCamera,
         .builtInWideAngleCamera, .builtInTelephotoCamera, .builtInUltraWideCamera,
       ]
       let cameras = [unspecifiedCamera]
@@ -134,5 +137,44 @@ final class AvailableCamerasTest: XCTestCase {
     waitForExpectations(timeout: 30, handler: nil)
 
     XCTAssertEqual(resultValue?.first?.lensDirection, .external)
+  }
+
+  func testAvailableCamerasShouldReportVirtualDevices() {
+    let mockDeviceDiscoverer = MockCameraDeviceDiscoverer()
+    let cameraPlugin = createCameraPlugin(with: mockDeviceDiscoverer)
+    let expectation = self.expectation(description: "Result finished")
+
+    mockDeviceDiscoverer.discoverySessionStub = { deviceTypes, mediaType, position in
+      // A Pro device exposes a virtual triple camera alongside the physical
+      // wide-angle camera.
+      let tripleCamera = MockCaptureDevice()
+      tripleCamera.uniqueID = "0"
+      tripleCamera.position = .back
+      tripleCamera.deviceType = .builtInTripleCamera
+      tripleCamera.isVirtualDevice = true
+
+      let wideAngleCamera = MockCaptureDevice()
+      wideAngleCamera.uniqueID = "1"
+      wideAngleCamera.position = .back
+      wideAngleCamera.deviceType = .builtInWideAngleCamera
+      wideAngleCamera.isVirtualDevice = false
+
+      return [tripleCamera, wideAngleCamera]
+    }
+
+    var resultValue: [PlatformCameraDescription]?
+    cameraPlugin.getAvailableCameras { result in
+      resultValue = self.assertSuccess(result)
+      expectation.fulfill()
+    }
+    waitForExpectations(timeout: 30, handler: nil)
+
+    XCTAssertEqual(resultValue?.count, 2)
+    // The virtual triple camera reports its primary (wide) lens and is flagged
+    // as virtual; the physical wide camera is not.
+    XCTAssertEqual(resultValue?[0].lensType, .wide)
+    XCTAssertTrue(resultValue?[0].isVirtualDevice ?? false)
+    XCTAssertEqual(resultValue?[1].lensType, .wide)
+    XCTAssertFalse(resultValue?[1].isVirtualDevice ?? true)
   }
 }

@@ -128,6 +128,12 @@ extension CameraPlugin: CameraApi {
       guard let strongSelf = self else { return }
 
       let discoveryDevices: [AVCaptureDevice.DeviceType] = [
+        // Virtual (logical) devices, which let the OS switch automatically
+        // between their constituent lenses (e.g. ultra-wide for macro focus).
+        .builtInTripleCamera,
+        .builtInDualWideCamera,
+        .builtInDualCamera,
+        // Physical devices.
         .builtInWideAngleCamera,
         .builtInTelephotoCamera,
         .builtInUltraWideCamera,
@@ -146,7 +152,8 @@ extension CameraPlugin: CameraApi {
         let cameraDescription = PlatformCameraDescription(
           name: device.uniqueID,
           lensDirection: lensFacing,
-          lensType: lensType
+          lensType: lensType,
+          isVirtualDevice: device.isVirtualDevice
         )
         reply.append(cameraDescription)
       }
@@ -177,6 +184,10 @@ extension CameraPlugin: CameraApi {
     case .builtInUltraWideCamera:
       return .ultraWide
     case .builtInDualWideCamera:
+      return .wide
+    case .builtInDualCamera:
+      return .wide
+    case .builtInTripleCamera:
       return .wide
     default:
       return .unknown

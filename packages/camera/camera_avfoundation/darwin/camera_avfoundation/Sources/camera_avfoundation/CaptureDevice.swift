@@ -21,6 +21,10 @@ protocol CaptureDevice: NSObjectProtocol {
   // Lens type
   var deviceType: AVCaptureDevice.DeviceType { get }
 
+  // Whether the device is a virtual (logical) device composed of two or more
+  // physical cameras (e.g. the triple, dual, or dual-wide cameras).
+  var isVirtualDevice: Bool { get }
+
   // Format/Configuration
   var flutterActiveFormat: CaptureDeviceFormat { get set }
   var flutterFormats: [CaptureDeviceFormat] { get }
