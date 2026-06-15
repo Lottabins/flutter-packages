@@ -42,6 +42,7 @@ class CameraDescription {
     required this.lensDirection,
     required this.sensorOrientation,
     this.lensType = CameraLensType.unknown,
+    this.isVirtualDevice = false,
   });
 
   /// The name of the camera device.
@@ -62,6 +63,18 @@ class CameraDescription {
   /// The type of lens the camera has.
   final CameraLensType lensType;
 
+  /// Whether this camera is a virtual (logical) device composed of multiple
+  /// physical cameras.
+  ///
+  /// Virtual devices — such as iOS's triple, dual, and dual-wide cameras or
+  /// Android's logical multi-cameras — let the operating system switch
+  /// automatically between their constituent physical lenses (for example,
+  /// engaging the ultra-wide lens for macro focus at close range).
+  ///
+  /// Defaults to false, including on platforms that do not report this
+  /// information.
+  final bool isVirtualDevice;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -69,14 +82,15 @@ class CameraDescription {
           runtimeType == other.runtimeType &&
           name == other.name &&
           lensDirection == other.lensDirection &&
-          lensType == other.lensType;
+          lensType == other.lensType &&
+          isVirtualDevice == other.isVirtualDevice;
 
   @override
-  int get hashCode => Object.hash(name, lensDirection, lensType);
+  int get hashCode => Object.hash(name, lensDirection, lensType, isVirtualDevice);
 
   @override
   String toString() {
     return '${objectRuntimeType(this, 'CameraDescription')}('
-        '$name, $lensDirection, $sensorOrientation, $lensType)';
+        '$name, $lensDirection, $sensorOrientation, $lensType, $isVirtualDevice)';
   }
 }

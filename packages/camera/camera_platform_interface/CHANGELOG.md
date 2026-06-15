@@ -1,3 +1,8 @@
+## 2.14.0
+
+* Adds `isVirtualDevice` to `CameraDescription` to indicate logical/virtual
+  multi-camera devices (e.g. iOS triple/dual/dual-wide cameras).
+
 ## 2.13.1
 
 * Changes the default implementation of `setJpegImageQuality` to a no-op so that

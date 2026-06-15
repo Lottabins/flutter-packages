@@ -31,12 +31,24 @@ void main() {
         lensDirection: CameraLensDirection.front,
         sensorOrientation: 90,
         lensType: CameraLensType.ultraWide,
+        isVirtualDevice: true,
       );
 
       expect(description.name, 'Test');
       expect(description.lensDirection, CameraLensDirection.front);
       expect(description.sensorOrientation, 90);
       expect(description.lensType, CameraLensType.ultraWide);
+      expect(description.isVirtualDevice, true);
+    });
+
+    test('isVirtualDevice should default to false', () {
+      const description = CameraDescription(
+        name: 'Test',
+        lensDirection: CameraLensDirection.front,
+        sensorOrientation: 90,
+      );
+
+      expect(description.isVirtualDevice, false);
     });
 
     test('equals should return true if objects are the same', () {
@@ -90,6 +102,24 @@ void main() {
       expect(firstDescription == secondDescription, false);
     });
 
+    test('equals should return false if isVirtualDevice is different', () {
+      const firstDescription = CameraDescription(
+        name: 'Test',
+        lensDirection: CameraLensDirection.back,
+        sensorOrientation: 90,
+        lensType: CameraLensType.wide,
+      );
+      const secondDescription = CameraDescription(
+        name: 'Test',
+        lensDirection: CameraLensDirection.back,
+        sensorOrientation: 90,
+        lensType: CameraLensType.wide,
+        isVirtualDevice: true,
+      );
+
+      expect(firstDescription == secondDescription, false);
+    });
+
     test('equals should return true if sensor orientation is different', () {
       const firstDescription = CameraDescription(
         name: 'Test',
@@ -118,6 +148,7 @@ void main() {
         description.name,
         description.lensDirection,
         description.lensType,
+        description.isVirtualDevice,
       );
 
       expect(description.hashCode, expectedHashCode);
@@ -133,7 +164,7 @@ void main() {
 
       expect(
         description.toString(),
-        'CameraDescription(Test, CameraLensDirection.front, 90, CameraLensType.ultraWide)',
+        'CameraDescription(Test, CameraLensDirection.front, 90, CameraLensType.ultraWide, false)',
       );
     });
   });
