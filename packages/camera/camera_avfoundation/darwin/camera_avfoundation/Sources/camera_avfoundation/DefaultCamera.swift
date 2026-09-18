@@ -233,6 +233,18 @@ final class DefaultCamera: NSObject, Camera {
       try setCaptureSessionPreset(mediaSettings.resolutionPreset)
     }
 
+    if captureDevice.deviceType == .builtInTripleCamera
+      || captureDevice.deviceType == .builtInDualWideCamera
+    {
+      if let wideZoom = captureDevice.virtualDeviceSwitchOverVideoZoomFactors.first {
+        // These devices start at ultra-wide. Match the reported wide lens field of view
+        // without restricting automatic constituent switching for close focus.
+        try captureDevice.lockForConfiguration()
+        defer { captureDevice.unlockForConfiguration() }
+        captureDevice.videoZoomFactor = CGFloat(truncating: wideZoom)
+      }
+    }
+
     updateOrientation()
 
     // Handle video and audio interruptions and errors. Interruption can happen for example by

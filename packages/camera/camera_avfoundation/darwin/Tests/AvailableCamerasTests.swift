@@ -47,6 +47,7 @@ final class AvailableCamerasTest: XCTestCase {
       telephotoCamera.position = .back
 
       var requiredTypes: [AVCaptureDevice.DeviceType] = [
+        .builtInTripleCamera, .builtInDualWideCamera, .builtInDualCamera,
         .builtInWideAngleCamera, .builtInTelephotoCamera, .builtInUltraWideCamera,
       ]
       var cameras = [wideAngleCamera, frontFacingCamera, telephotoCamera, ultraWideCamera]
@@ -84,6 +85,7 @@ final class AvailableCamerasTest: XCTestCase {
       frontFacingCamera.position = .front
 
       var requiredTypes: [AVCaptureDevice.DeviceType] = [
+        .builtInTripleCamera, .builtInDualWideCamera, .builtInDualCamera,
         .builtInWideAngleCamera, .builtInTelephotoCamera, .builtInUltraWideCamera,
       ]
       let cameras = [wideAngleCamera, frontFacingCamera]
@@ -116,6 +118,7 @@ final class AvailableCamerasTest: XCTestCase {
       unspecifiedCamera.position = .unspecified
 
       var requiredTypes: [AVCaptureDevice.DeviceType] = [
+        .builtInTripleCamera, .builtInDualWideCamera, .builtInDualCamera,
         .builtInWideAngleCamera, .builtInTelephotoCamera, .builtInUltraWideCamera,
       ]
       let cameras = [unspecifiedCamera]

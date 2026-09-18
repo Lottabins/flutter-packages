@@ -55,6 +55,7 @@ class MockCaptureDevice: NSObject, CaptureDevice {
   var isFocusPointOfInterestSupported = false
   var maxAvailableVideoZoomFactor = CGFloat(0)
   var minAvailableVideoZoomFactor = CGFloat(0)
+  var virtualDeviceSwitchOverVideoZoomFactors: [NSNumber] = []
   var videoZoomFactor: CGFloat {
     get { 0 }
     set {

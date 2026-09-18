@@ -1,3 +1,12 @@
+## 0.10.4
+
+* Initializes triple and dual-wide virtual cameras at the wide lens zoom factor.
+* Adds virtual multi-camera devices to camera discovery to support automatic lens switching for macro focus.
+
+## 0.10.3
+
+* Updates pigeon dev_dependency to ^27.3.2 for analyzer 14 compatibility.
+
 ## 0.10.2
 
 * Adds `setJpegImageQuality` for controlling JPEG compression quality.
