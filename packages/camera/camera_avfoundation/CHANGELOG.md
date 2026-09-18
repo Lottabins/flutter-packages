@@ -1,5 +1,6 @@
 ## 0.10.4
 
+* Initializes triple and dual-wide virtual cameras at the wide lens zoom factor.
 * Adds virtual multi-camera devices to camera discovery to support automatic lens switching for macro focus.
 
 ## 0.10.3

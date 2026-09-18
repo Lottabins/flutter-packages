@@ -49,6 +49,7 @@ protocol CaptureDevice: NSObjectProtocol {
   func isExposureModeSupported(_ mode: AVCaptureDevice.ExposureMode) -> Bool
 
   // Zoom
+  var virtualDeviceSwitchOverVideoZoomFactors: [NSNumber] { get }
   var maxAvailableVideoZoomFactor: CGFloat { get }
   var minAvailableVideoZoomFactor: CGFloat { get }
   var videoZoomFactor: CGFloat { get set }

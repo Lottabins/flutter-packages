@@ -18,6 +18,63 @@ final class CameraZoomTests: XCTestCase {
     return (camera, mockDevice)
   }
 
+  func testInitialZoomUsesWideConstituentForUltraWideVirtualCameras() throws {
+    for deviceType: AVCaptureDevice.DeviceType in [.builtInTripleCamera, .builtInDualWideCamera] {
+      let device = MockCaptureDevice()
+      device.deviceType = deviceType
+      device.virtualDeviceSwitchOverVideoZoomFactors = [2, 6]
+      var initialZoom: CGFloat?
+      device.setVideoZoomFactorStub = { initialZoom = $0 }
+      let configuration = CameraTestUtils.createTestCameraConfiguration()
+      configuration.videoCaptureDeviceFactory = { _ in device }
+
+      _ = try DefaultCamera(configuration: configuration)
+
+      XCTAssertEqual(initialZoom, 2)
+    }
+  }
+
+  func testInitialZoomLeavesOtherCameraTypesUnchanged() throws {
+    for deviceType: AVCaptureDevice.DeviceType in [
+      .builtInDualCamera, .builtInWideAngleCamera, .builtInUltraWideCamera, .builtInTelephotoCamera,
+    ] {
+      let device = MockCaptureDevice()
+      device.deviceType = deviceType
+      device.virtualDeviceSwitchOverVideoZoomFactors = [3]
+      device.setVideoZoomFactorStub = { _ in XCTFail("Should preserve the device's initial zoom") }
+      let configuration = CameraTestUtils.createTestCameraConfiguration()
+      configuration.videoCaptureDeviceFactory = { _ in device }
+
+      _ = try DefaultCamera(configuration: configuration)
+    }
+  }
+
+  func testInitialZoomHandlesMissingSwitchOverFactors() throws {
+    let device = MockCaptureDevice()
+    device.deviceType = .builtInTripleCamera
+    device.setVideoZoomFactorStub = { _ in XCTFail("No wide zoom factor is available") }
+    let configuration = CameraTestUtils.createTestCameraConfiguration()
+    configuration.videoCaptureDeviceFactory = { _ in device }
+
+    _ = try DefaultCamera(configuration: configuration)
+  }
+
+  func testInitialZoomPropagatesConfigurationLockFailure() {
+    let device = MockCaptureDevice()
+    device.deviceType = .builtInDualWideCamera
+    device.virtualDeviceSwitchOverVideoZoomFactors = [2]
+    let lockError = NSError(domain: "CameraZoomTests", code: 1)
+    device.lockForConfigurationStub = { throw lockError }
+    device.setVideoZoomFactorStub = { _ in XCTFail("Must not set zoom without a configuration lock")
+    }
+    let configuration = CameraTestUtils.createTestCameraConfiguration()
+    configuration.videoCaptureDeviceFactory = { _ in device }
+
+    XCTAssertThrowsError(try DefaultCamera(configuration: configuration)) { error in
+      XCTAssertEqual(error as NSError, lockError)
+    }
+  }
+
   func testSetZoomLevel_setVideoZoomFactor() {
     let (camera, mockDevice) = createCamera()
 
