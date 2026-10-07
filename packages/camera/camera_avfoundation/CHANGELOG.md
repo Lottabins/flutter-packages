@@ -1,7 +1,19 @@
-## 0.10.4
+## 0.11.1
 
 * Initializes triple and dual-wide virtual cameras at the wide lens zoom factor.
 * Adds virtual multi-camera devices to camera discovery to support automatic lens switching for macro focus.
+
+## 0.11.0
+
+* Adds support for custom video output path in video recording.
+
+## 0.10.3+1
+
+* Replaces the deprecated `isHighResolutionCaptureEnabled`/`isHighResolutionPhotoEnabled` with
+  `maxPhotoDimensions` on iOS 16 and later, falling back to the deprecated APIs on older versions.
+* Fixes the maximum resolution setting being ignored for HEIF captures when using
+  `ResolutionPreset.max`.
+* Updates minimum supported SDK version to Flutter 3.41/Dart 3.11.
 
 ## 0.10.3
 

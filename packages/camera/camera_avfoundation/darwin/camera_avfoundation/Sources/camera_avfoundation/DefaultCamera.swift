@@ -179,7 +179,6 @@ final class DefaultCamera: NSObject, Camera {
     flashMode = captureDevice.hasFlash ? .auto : .off
 
     capturePhotoOutput = AVCapturePhotoOutput()
-    capturePhotoOutput.isHighResolutionCaptureEnabled = true
 
     videoCaptureSession.automaticallyConfiguresApplicationAudioSession = false
     audioCaptureSession.automaticallyConfiguresApplicationAudioSession = false
@@ -507,8 +506,27 @@ final class DefaultCamera: NSObject, Camera {
   }
 
   func start() {
+    configureMaxPhotoDimensions()
+
     videoCaptureSession.startRunning()
     audioCaptureSession.startRunning()
+  }
+
+  /// Configures `capturePhotoOutput` to allow capturing at the active format's highest supported
+  /// resolution. Must be called whenever `captureDevice` changes, since the active format's
+  /// supported dimensions can change with it.
+  private func configureMaxPhotoDimensions() {
+    if #available(iOS 16.0, *) {
+      // If the active format reports no supported dimensions, `capturePhotoOutput` keeps
+      // AVFoundation's own default rather than being left unconfigured.
+      if let maxSupportedDimensions = captureDevice.flutterActiveFormat.supportedMaxPhotoDimensions
+        .max(by: { Int64($0.width) * Int64($0.height) < Int64($1.width) * Int64($1.height) })
+      {
+        capturePhotoOutput.maxPhotoDimensions = maxSupportedDimensions
+      }
+    } else {
+      capturePhotoOutput.isHighResolutionCaptureEnabled = true
+    }
   }
 
   func stop() {
@@ -517,6 +535,7 @@ final class DefaultCamera: NSObject, Camera {
   }
 
   func startVideoRecording(
+    videoOutputPath: String?,
     completion: @escaping (Result<Void, any Error>) -> Void,
     messengerForStreaming messenger: FlutterBinaryMessenger?
   ) {
@@ -532,29 +551,41 @@ final class DefaultCamera: NSObject, Camera {
 
     if let messenger = messenger {
       startImageStream(with: messenger) { [weak self] error in
-        self?.setUpVideoRecording(completion: completion)
+        self?.setUpVideoRecording(videoOutputPath: videoOutputPath, completion: completion)
       }
       return
     }
 
-    setUpVideoRecording(completion: completion)
+    setUpVideoRecording(videoOutputPath: videoOutputPath, completion: completion)
   }
 
   /// Main logic to setup the video recording.
-  private func setUpVideoRecording(completion: @escaping (Result<Void, any Error>) -> Void) {
-    let videoRecordingPath: String
-    do {
-      videoRecordingPath = try getTemporaryFilePath(
-        withExtension: "mp4",
-        subfolder: "videos",
-        prefix: "REC_")
-      self.videoRecordingPath = videoRecordingPath
-    } catch let error as NSError {
-      completion(.failure(DefaultCamera.pigeonErrorFromNSError(error)))
-      return
+  private func setUpVideoRecording(
+    videoOutputPath: String?, completion: @escaping (Result<Void, any Error>) -> Void
+  ) {
+    let path: String
+    if let videoOutputPath = videoOutputPath {
+      do {
+        try validateOutputPath(videoOutputPath)
+      } catch {
+        completion(.failure(error))
+        return
+      }
+      path = videoOutputPath
+    } else {
+      do {
+        path = try getTemporaryFilePath(
+          withExtension: "mp4",
+          subfolder: "videos",
+          prefix: "REC_")
+      } catch let error as NSError {
+        completion(.failure(DefaultCamera.pigeonErrorFromNSError(error)))
+        return
+      }
     }
+    videoRecordingPath = path
 
-    guard setupWriter(forPath: videoRecordingPath) else {
+    guard setupWriter(forPath: path) else {
       completion(
         .failure(
           PigeonError(
@@ -587,6 +618,34 @@ final class DefaultCamera: NSObject, Camera {
     outputForOffsetAdjusting = captureVideoOutput.avOutput
     lastAppendedVideoSampleTime = CMTime.negativeInfinity
     completion(.success(()))
+  }
+
+  private func validateOutputPath(_ path: String) throws {
+    var isDir: ObjCBool = false
+    if FileManager.default.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue {
+      throw PigeonError(code: "IOError", message: "Path is a directory: \(path)", details: nil)
+    }
+    let parentPath = (path as NSString).deletingLastPathComponent
+    if !parentPath.isEmpty && !FileManager.default.fileExists(atPath: parentPath) {
+      throw PigeonError(
+        code: "IOError", message: "Parent directory does not exist: \(parentPath)", details: nil)
+    }
+
+    let lowerPath = path.lowercased()
+    let validExtensions = [".mp4"]
+    if !validExtensions.contains(where: { lowerPath.hasSuffix($0) }) {
+      throw PigeonError(
+        code: "IOError",
+        message: "Invalid video extension. Supported: \(validExtensions.joined(separator: ", "))",
+        details: nil)
+    }
+
+    // AVAssetWriter will fail to initialize if a file already exists at the destination path.
+    // Delete any existing file to ensure consistent behavior with Android (which overwrites
+    // automatically) and prevent recording failures when reusing a custom path.
+    if FileManager.default.fileExists(atPath: path) {
+      try FileManager.default.removeItem(atPath: path)
+    }
   }
 
   private func setupWriter(forPath path: String) -> Bool {
@@ -718,10 +777,6 @@ final class DefaultCamera: NSObject, Camera {
   func captureToFile(completion: @escaping (Result<String, any Error>) -> Void) {
     var settings = AVCapturePhotoSettings()
 
-    if mediaSettings.resolutionPreset == .max {
-      settings.isHighResolutionPhotoEnabled = true
-    }
-
     let fileExtension: String
 
     let isHEVCCodecAvailable = capturePhotoOutput.availablePhotoCodecTypes.contains(
@@ -739,9 +794,14 @@ final class DefaultCamera: NSObject, Camera {
             AVVideoQualityKey: CGFloat(imageQuality) / 100.0
           ],
         ])
-        if mediaSettings.resolutionPreset == .max {
-          settings.isHighResolutionPhotoEnabled = true
-        }
+      }
+    }
+
+    if mediaSettings.resolutionPreset == .max {
+      if #available(iOS 16.0, *) {
+        settings.maxPhotoDimensions = capturePhotoOutput.maxPhotoDimensions
+      } else {
+        settings.isHighResolutionPhotoEnabled = true
       }
     }
 
@@ -1219,6 +1279,8 @@ final class DefaultCamera: NSObject, Camera {
     }
     videoCaptureSession.addConnection(newConnection)
     videoCaptureSession.commitConfiguration()
+
+    configureMaxPhotoDimensions()
 
     completion(.success(()))
   }
